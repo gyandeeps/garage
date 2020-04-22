@@ -11,7 +11,7 @@ const App = () => {
     const switchHandle = () => {
         changeProgress(true);
         socket.current?.emit("open-close", {}, (data: boolean) => {
-            console.log(data);
+            changeProgress(false);
         });
     };
 
@@ -21,7 +21,6 @@ const App = () => {
         socket.current.on(
             "garage-status",
             ({ isOpen }: { isOpen: boolean }) => {
-                console.log(isOpen);
                 changeIsOpen(isOpen);
             }
         );
