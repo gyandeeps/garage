@@ -7,7 +7,7 @@ import SocketIo from "socket.io";
 const app = express();
 
 app.set("port", process.env.PORT || 3000);
-app.use(express.static("public"));
+app.use(express.static("build"));
 // app.use(
 //     bodyParser.json({
 //         limit: "500kb"
@@ -29,7 +29,7 @@ app.use(
 );
 
 app.get("/", (req, res) =>
-    res.sendFile("./public/index.html", { root: process.cwd() })
+    res.sendFile("./build/index.html", { root: process.cwd() })
 );
 
 app.get("*", (req, res) => {
