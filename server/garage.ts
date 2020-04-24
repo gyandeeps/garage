@@ -27,13 +27,7 @@ doorSensor.watch((err, value) => {
         cancelAutoClose();
     }
 
-    garageStatusSubscribers.forEach((fn) =>
-        fn({
-            isOpen,
-            dateTime: openCloseDtTm,
-            isAutoCloseActive: isAutoCloseActive()
-        })
-    );
+    updateStatusToClients();
 });
 
 const activateAutoClose = () => {
@@ -46,6 +40,14 @@ const activateAutoClose = () => {
         }
     }, 300000);
 };
+
+const cancelAutoClose = () => {
+    clearInterval(garageAutoCloseInterval as NodeJS.Timeout);
+    garageAutoCloseInterval = null;
+};
+
+const updateStatusToClients = () =>
+    garageStatusSubscribers.forEach((fn) => fn(isGarageOpen()));
 
 const sleep = (time = 5000) =>
     new Promise((resolve) => setTimeout(resolve, time));
@@ -69,7 +71,7 @@ export const isGarageOpen = (): Status => ({
 
 export const isAutoCloseActive = () => garageAutoCloseInterval !== null;
 
-export const cancelAutoClose = () => {
-    clearInterval(garageAutoCloseInterval as NodeJS.Timeout);
-    garageAutoCloseInterval = null;
+export const forceCancelAutoClose = () => {
+    cancelAutoClose();
+    updateStatusToClients();
 };

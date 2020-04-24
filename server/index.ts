@@ -5,7 +5,7 @@ import {
     openCloseGarage,
     isGarageOpen,
     garageStatus,
-    cancelAutoClose
+    forceCancelAutoClose
 } from "./garage";
 import SocketIo from "socket.io";
 
@@ -62,5 +62,5 @@ io.on("connection", (socket) => {
         await openCloseGarage();
         callback(true);
     });
-    socket.on("keep-it-open", () => cancelAutoClose());
+    socket.on("keep-it-open", () => forceCancelAutoClose());
 });
