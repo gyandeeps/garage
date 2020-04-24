@@ -1,7 +1,12 @@
 import express from "express";
 // const bodyParser = require("body-parser");
 import cors from "cors";
-import { openCloseGarage, isGarageOpen, garageStatus } from "./garage";
+import {
+    openCloseGarage,
+    isGarageOpen,
+    garageStatus,
+    cancelAutoClose
+} from "./garage";
 import SocketIo from "socket.io";
 
 const app = express();
@@ -43,22 +48,19 @@ app.use((req, res, next) => {
     next(err);
 });
 
-const server = app.listen(app.get("port"), () => {
-    console.log(
-        "Express server listening on port %d in %s mode",
-        app.get("port")
-    );
-});
-
-const io = SocketIo(server);
+const io = SocketIo(
+    app.listen(app.get("port"), () => {
+        console.log("Express server listening on port %d", app.get("port"));
+    })
+);
 
 garageStatus((status) => io.emit("garage-status", { isOpen: status }));
 io.on("connection", (socket) => {
     socket.emit("garage-status", { isOpen: isGarageOpen() });
 
-    socket.on("open-close", async (data, callback) => {
+    socket.on("open-close", async (_, callback) => {
         await openCloseGarage();
         callback(true);
     });
-    socket.on("is-garage-open", (data, callback) => callback(isGarageOpen()));
+    socket.on("keep-it-open", () => cancelAutoClose());
 });

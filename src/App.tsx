@@ -15,6 +15,8 @@ const App = () => {
         });
     };
 
+    const cancelAutoClose = () => socket.current?.emit("keep-it-open", {});
+
     useEffect(() => {
         socket.current = SocketIo();
 
@@ -30,7 +32,7 @@ const App = () => {
         <div className="layout">
             <div className={`status ${isOpen ? "status-open" : ""}`}>
                 <label>Garage Open: </label>
-                <span id="garageStatus">{isOpen ? "Yes" : "No"}</span>
+                <span id="garageStatus">{isOpen ? "Yup" : "Nope"}</span>
             </div>
             <button
                 id="switchButton"
@@ -38,8 +40,13 @@ const App = () => {
                 onClick={switchHandle}
                 disabled={inProgress}
             >
-                <img alt="Homw icon" src={logo} />
+                <img alt="Open close garage" src={logo} />
             </button>
+            {isOpen && (
+                <button className="cancel-button" onClick={cancelAutoClose}>
+                    Cancel auto close
+                </button>
+            )}
         </div>
     );
 };
