@@ -1,6 +1,7 @@
 import { Gpio } from "onoff";
 
-let garageAutoCloseInterval: NodeJS.Timeout;
+let garageAutoCloseInterval: NodeJS.Timeout | null = null;
+let openCloseDtTm = Date.now();
 const buttonTrigger = new Gpio(4, "out", undefined, {
     reconfigureDirection: false
 });
@@ -9,30 +10,39 @@ const doorSensor = new Gpio(2, "in", "both", {
     debounceTimeout: 1000
 });
 
-type Callback = (status: boolean) => void;
+type Status = { isOpen: boolean; dateTime: number; isAutoCloseActive: boolean };
+
+type Callback = (obj: Status) => void;
 const garageStatusSubscribers = new Set<Callback>();
 
 doorSensor.watch((err, value) => {
     if (err) console.error(err);
 
     const isOpen = !Boolean(value);
+    openCloseDtTm = Date.now();
 
     if (isOpen) {
         activateAutoClose();
     } else {
-        clearInterval(garageAutoCloseInterval);
+        cancelAutoClose();
     }
 
-    garageStatusSubscribers.forEach((fn) => fn(isOpen));
+    garageStatusSubscribers.forEach((fn) =>
+        fn({
+            isOpen,
+            dateTime: openCloseDtTm,
+            isAutoCloseActive: isAutoCloseActive()
+        })
+    );
 });
 
 const activateAutoClose = () => {
-    clearInterval(garageAutoCloseInterval);
+    cancelAutoClose();
     garageAutoCloseInterval = setInterval(() => {
         if (isGarageOpen()) {
             openCloseGarage();
         } else {
-            clearInterval(garageAutoCloseInterval);
+            cancelAutoClose();
         }
     }, 300000);
 };
@@ -51,6 +61,15 @@ export const garageStatus = (fn: Callback) => {
     return () => garageStatusSubscribers.delete(fn);
 };
 
-export const isGarageOpen = () => !Boolean(doorSensor.readSync());
+export const isGarageOpen = (): Status => ({
+    isOpen: !Boolean(doorSensor.readSync()),
+    dateTime: openCloseDtTm,
+    isAutoCloseActive: isAutoCloseActive()
+});
 
-export const cancelAutoClose = () => clearInterval(garageAutoCloseInterval);
+export const isAutoCloseActive = () => garageAutoCloseInterval !== null;
+
+export const cancelAutoClose = () => {
+    clearInterval(garageAutoCloseInterval as NodeJS.Timeout);
+    garageAutoCloseInterval = null;
+};

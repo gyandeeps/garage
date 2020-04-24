@@ -54,9 +54,9 @@ const io = SocketIo(
     })
 );
 
-garageStatus((status) => io.emit("garage-status", { isOpen: status }));
+garageStatus((status) => io.emit("garage-status", status));
 io.on("connection", (socket) => {
-    socket.emit("garage-status", { isOpen: isGarageOpen() });
+    socket.emit("garage-status", isGarageOpen());
 
     socket.on("open-close", async (_, callback) => {
         await openCloseGarage();

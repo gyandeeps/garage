@@ -3,10 +3,14 @@ import logo from "./logo.svg";
 import "./App.css";
 import SocketIo from "socket.io-client";
 
+type Status = { isOpen: boolean; dateTime: number; isAutoCloseActive: boolean };
+
 const App = () => {
     const socket = useRef<typeof SocketIo.Socket>();
     const [inProgress, changeProgress] = useState(false);
     const [isOpen, changeIsOpen] = useState(true);
+    const [dtTime, updateDtTm] = useState("");
+    const [isAutoCloseActive, changeAutoClose] = useState(false);
 
     const switchHandle = () => {
         changeProgress(true);
@@ -15,15 +19,20 @@ const App = () => {
         });
     };
 
-    const cancelAutoClose = () => socket.current?.emit("keep-it-open", {});
+    const cancelAutoClose = () => {
+        socket.current?.emit("keep-it-open", {});
+        changeAutoClose(false);
+    };
 
     useEffect(() => {
         socket.current = SocketIo();
 
         socket.current.on(
             "garage-status",
-            ({ isOpen }: { isOpen: boolean }) => {
+            ({ isOpen, dateTime, isAutoCloseActive }: Status) => {
                 changeIsOpen(isOpen);
+                updateDtTm(new Date(dateTime).toLocaleString());
+                changeAutoClose(isAutoCloseActive);
             }
         );
     }, []);
@@ -42,11 +51,14 @@ const App = () => {
             >
                 <img alt="Open close garage" src={logo} />
             </button>
-            {isOpen && (
+            {isAutoCloseActive && (
                 <button className="cancel-button" onClick={cancelAutoClose}>
                     Cancel auto close
                 </button>
             )}
+            <div>
+                Open/close time: <span>{dtTime || "--"}</span>
+            </div>
         </div>
     );
 };
