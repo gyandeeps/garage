@@ -31,7 +31,13 @@ const App = () => {
             "garage-status",
             ({ isOpen, dateTime, isAutoCloseActive }: Status) => {
                 changeIsOpen(isOpen);
-                updateDtTm(new Date(dateTime).toLocaleString());
+                updateDtTm(
+                    new Date(dateTime).toLocaleString("en-US", {
+                        /// @ts-ignore
+                        dateStyle: "medium",
+                        timeStyle: "short"
+                    })
+                );
                 changeAutoClose(isAutoCloseActive);
             }
         );
@@ -40,7 +46,7 @@ const App = () => {
     return (
         <div className="layout">
             <div className={`status ${isOpen ? "status-open" : ""}`}>
-                <label>Garage Open: </label>
+                <label>Open: </label>
                 <span id="garageStatus">{isOpen ? "Yup" : "Nope"}</span>
             </div>
             <button
