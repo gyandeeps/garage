@@ -15,19 +15,25 @@ type Status = { isOpen: boolean; dateTime: number; isAutoCloseActive: boolean };
 type Callback = (obj: Status) => void;
 const garageStatusSubscribers = new Set<Callback>();
 
+let lastStatus = !Boolean(doorSensor.readSync());
+
 doorSensor.watch((err, value) => {
     if (err) console.error(err);
 
     const isOpen = !Boolean(value);
-    openCloseDtTm = Date.now();
 
-    if (isOpen) {
-        activateAutoClose();
-    } else {
-        cancelAutoClose();
+    if (isOpen !== lastStatus) {
+        lastStatus = isOpen;
+        openCloseDtTm = Date.now();
+
+        if (isOpen) {
+            activateAutoClose();
+        } else {
+            cancelAutoClose();
+        }
+
+        updateStatusToClients();
     }
-
-    updateStatusToClients();
 });
 
 const activateAutoClose = () => {
@@ -64,7 +70,7 @@ export const garageStatus = (fn: Callback) => {
 };
 
 export const isGarageOpen = (): Status => ({
-    isOpen: !Boolean(doorSensor.readSync()),
+    isOpen: lastStatus,
     dateTime: openCloseDtTm,
     isAutoCloseActive: isAutoCloseActive()
 });
